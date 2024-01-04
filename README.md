@@ -1,7 +1,24 @@
-## CIS 580, Machine Perception, Fall 2023
+<div align="center">
+<p align="center">
+  <img src="https://raw.githubusercontent.com/PKief/vscode-material-icon-theme/ec559a9f6bfd399b82bb44393651661b08aaf7ba/icons/folder-markdown-open.svg" width="100" />
+</p>
+<p align="center">
+    <h1 align="center">NeRF- Neural Radiance Field 3D Reconstruction</h1>
+</p>
 
-### Part 2: Fitting a 3D Image
+<p align="center">
+	<img src="https://img.shields.io/github/license/Tejendra00/FrankaEmika_Pick_Place?style=standard" alt="license" >
+	<img src="https://img.shields.io/github/languages/top/Tejendra00/FrankaEmika_Pick_Place?style=standard" alt="repo-top-language">
+<p>
+<p align="center">
+	<!-- standard option, no dependency badges. -->
+</p>
+</div>
+<hr>
 
+## Introduction
+
+The Neural Radiance Fields (NeRF) project involved creating a novel view synthesis of complex 3D scenes. This  project was structured in several parts, each contributing to the overall task of generating photorealistic renderings from sparse viewpoints.
 
 ```python
 import os
@@ -13,33 +30,12 @@ import matplotlib.pyplot as plt
 import torch.nn.functional as F
 import time
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(device)
-```
-
-    cuda
-
-
-
-```python
 url = "https://drive.google.com/file/d/13eBK_LWxs4SkruFKH7glKK9jwQU1BkXK/view?usp=sharing"
 gdown.download(url=url, output='lego_data.npz', quiet=False, fuzzy=True)
 ```
 
-    Downloading...
-    From: https://drive.google.com/uc?id=13eBK_LWxs4SkruFKH7glKK9jwQU1BkXK
-    To: /content/lego_data.npz
-    100%|██████████| 12.7M/12.7M [00:00<00:00, 114MB/s]
 
-
-
-
-
-    'lego_data.npz'
-
-
-
-Here, we load the data that is comprised by the images, the R and T matrices of each camera position with respect to the world coordinates and the intrinsics parameters K of the camera.
+<details closed><summary>Load Data</summary>
 
 
 ```python
@@ -73,19 +69,14 @@ plt.show()
 
 print(data)
 ```
-
-    torch.Size([106, 4, 4])
-
-
+</details>
 
     
 ![png](cis580fall2023_projB_files/cis580fall2023_projB_19_1.png)
     
+## Fitting a 2D Image Using MLP: 
 
-
-    <numpy.lib.npyio.NpzFile object at 0x7dc691c9a530>
-
-
+Initially, the project focused on fitting a 2D image using a Multilayer Perceptron (MLP). This involved positional encoding to map input coordinates to a higher-dimensional space, enabling the MLP to better approximate high-frequency variations in color and texture. This part was crucial for understanding how neural networks can learn the mapping from pixel coordinates to RGB colors.
 
 <details closed><summary>Positional Encoding</summary>
 
@@ -167,7 +158,6 @@ def get_rays(height, width, intrinsics, w_R_c, w_T_c):
 ```
 </details>
 
-Complete the next function to visualize how is the dataset created. You will be able to see from which point of view each image has been captured for the 3D object. What we want to achieve here, is to being able to interpolate between these given views and synthesize new realistic views of the 3D object.
 
 <details closed><summary>Plot All Poses</summary>
 
@@ -255,6 +245,10 @@ def stratified_sampling(ray_origins, ray_directions, near, far, samples):
 </details>
 
 <!-- 2.3 Define the network architecture of NeRF along with a function that divided data into chunks to avoid memory leaks during training. -->
+
+## 3D Scene Representation and NeRF MLP Design: 
+
+The core of the project was to represent a 3D scene as a set of points, each with its color and density. The NeRF MLP was designed to learn the mapping between the position and direction of points along a ray with their color and density, using positional encoding for both position and direction.
 
 <details closed><summary>NeRF Model</summary>
 
@@ -366,6 +360,9 @@ def get_batches(ray_points, ray_directions, num_x_frequencies, num_d_frequencies
 
 <!-- 2.4 Compute the compositing weights of samples on camera ray and then complete the volumetric rendering procedure to reconstruct a whole RGB image from the sampled points and the outputs of the neural network. -->
 
+## Volume Rendering: 
+The quintessence of NeRF is the volumetric rendering formula, which uses the density and color of samples along a ray to approximate the color of that ray, and thus the pixel color. This involved numerically estimating an integral over the sampled points, considering both the accumulated transmittance and the RGB color at each point.
+
 <details closed><summary>Volumetric Rendering</summary>
 
 ```python
@@ -414,11 +411,6 @@ def volumetric_rendering(rgb, s, depth_points):
 
     return rec_image
 ```
-</details>
-
-To test and visualize your implementation, independently of the previous and next steps of the
-NeRF pipeline, you can load the sanity_volumentric.pt file, run your implementation of the volumetric function and expect to see the figure provided in the handout.
-
 
 
 ```python
@@ -426,13 +418,6 @@ url = "https://drive.google.com/file/d/1ag6MqSh3h4KY10Mcx5fKxt9roGNLLILK/view?us
 gdown.download(url=url, output='sanity_volumentric.pt', quiet=False, fuzzy=True)
 rbd = torch.load('sanity_volumentric.pt')
 ```
-
-    Downloading...
-    From: https://drive.google.com/uc?id=1ag6MqSh3h4KY10Mcx5fKxt9roGNLLILK
-    To: /content/sanity_volumentric.pt
-    100%|██████████| 120M/120M [00:00<00:00, 234MB/s] 
-
-
 
 ```python
 r = rbd['rgb']
@@ -446,13 +431,15 @@ plt.title(f'Volumentric rendering of a sphere with $\\sigma={0.2}$, on blue back
 plt.show()
 ```
 
+</details>
+
 
     
 ![png](cis580fall2023_projB_files/cis580fall2023_projB_33_0.png)
     
+## Rendering an Image: 
+To render an image, the project required calculating all the rays' origins and directions for a given image, sampling points along these rays, and then passing them through the NeRF MLP. The volumetric rendering equation was then applied to produce the reconstructed image.
 
-
-2.5 Combine everything together. Given the pose position of a camera, compute the camera rays and sample the 3D points along these rays. Divide those points into batches and feed them to the neural network. Concatenate them and use them for the volumetric rendering to reconstructed the final image.
 
 <details closed><summary>One Forward Pass</summary>
 
@@ -498,8 +485,11 @@ def one_forward_pass(height, width, intrinsics, pose, near, far, samples, model,
 ```
 </details>
 
-If you manage to pass the autograder for all the previous functions, then it is time to train a NeRF! We provide the hyperparameters for you, we initialize the NeRF model and its weights, and we define a couple lists that will be needed to store results.
+## Training and Reconstruction: 
 
+The final aspect was training the NeRF model and reconstructing novel views of the scene. This involved selecting random images from the training set, using them for forward passes of the model, calculating errors, and backpropagating the loss to train the model. The goal was to achieve a high Peak Signal-to-Noise Ratio (PSNR) after a certain number of iterations.
+
+<details closed><summary>Train and Visualize</summary>
 
 ```python
 num_x_frequencies = 10
@@ -592,6 +582,8 @@ plt.imsave('test_lego.png',test_rec_image.detach().cpu().numpy())
 torch.save(model.state_dict(),'model_nerf.pt')
 print('Done!')
 ```
+</details>
+
 
       0%|          | 0/3001 [00:00<?, ?it/s]
 
@@ -681,4 +673,12 @@ print('Done!')
 
 
     
+This project demonstrated the technique of NeRF in synthesizing new views of 3D scenes from sparse data, leveraging deep learning and advanced computational methods in computer vision. It showcased the intricacies of neural network design, volumetric rendering, and the challenges of working with complex 3D data.
 
+---
+
+##  License
+
+This project is protected under the [MIT] License. For more details, refer to the [LICENSE](https://choosealicense.com/licenses/mit/) file.
+
+---
