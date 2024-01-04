@@ -584,13 +584,6 @@ print('Done!')
 ```
 </details>
 
-
-      0%|          | 0/3001 [00:00<?, ?it/s]
-
-    Iteration 0  Loss: 0.0997  PSNR: 9.18  Time: 0.17 secs per iter,  0.07 mins in total
-
-
-
     
 ![png](cis580fall2023_projB_files/cis580fall2023_projB_38_2.png)
     
